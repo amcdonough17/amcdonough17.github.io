@@ -117,20 +117,522 @@
                     size(400, 400); 
                     frameRate(30);
                  
-           var faceSize = 10;
-                    
-           draw = function(){         
-        fill(255, 255, 0);
-        ellipse(200, 200, 200, 200);
+                     // SHOOT_AROUND
+
+// global variables Shared
+
+// variable defining total millis since program called
+var startTimer = millis();
+// variable allowing all scene functions to be defined on global variable
+var currentScene;
+// time
+var t = 0;
+// global dummy variable to recognize when local "mainGame" function millis subtracted from 60 reaches 0  
+var timerBinary =0;
+
+
+
+// gloabal variables startScene
+
+// Y location of bouncing basketball
+var y = 0;
+
+
+//global variables main Game
+
+// points scored
+var score = 0;
+// variable placing ball in motion - 1 || at start location - 0
+var timeIncrease = 0;
+// ball's position before shot
+var positionX = 100;
+// power of shot as recognized by power bar, shot, and input by UP arrow key
+var timeButtonPressed = 40;
+// variable recognizing when ball is in motion
+var gameStarted = false;
+
+
+
+
+//global variables end scene
+
+// falling basketballs positional arrays
+var xPositions = [];
+var yPositions = [];
+  
+
+
+//ball object - main game
+var Basketball = function( y, speed, acceleration, angle, radius){
+    this.x = positionX;
+    this.y = y;
+    this.radius = radius;
+    this.speed = speed;
+    this.acceleration = acceleration;
+    this.angle = angle;
+    this.ballY = this.y-this.speed*t*this.angle-this.acceleration*t*t;
+    this.ballX = this.x + this.speed*t;
+        
+    this.draw = function() {
+        fill(250, 139, 3);
+        ellipse( this.ballX,this.ballY, this.radius*2, this.radius*2);
+        ellipse( this.ballX,this.ballY, 15, 25);
+        ellipse (this.ballX, this.ballY, 5, 25);
         noFill();
-        stroke(0, 0, 0);
-        strokeWeight(2);
-        arc(200, 200, 150, 100, 0, PI);
-        fill(0, 0, 0);
-        ellipse(250, 200, faceSize, faceSize);
-        ellipse(153, 200, faceSize, faceSize);
-               faceSize++;
-           };
+        ellipse (this.ballX, this.ballY, 25,15);
+        ellipse (this.ballX, this.ballY, 25,5);
+    };
+    
+    // ball respawn/initiate shot mechanics
+    if (gameStarted === true){t = t + timeIncrease; 
+    
+    } else if (gameStarted === false){t = 0; timeIncrease = 0; }
+
+    // manage collision effects
+    this.update = function(){
+        
+        // backboard collision
+        if (this.ballX > 325 && this.ballX < 330 && this.ballY < 209 && this.ballY > 161){
+        timeIncrease = -1; // should change this to reverse direction, not time
+        }
+        
+        // scoring & Ball Respawn
+        if (this.ballX>304 && this.ballX < 322 && this.ballY > 195 && this.ballY < 215 &&           this.x < 100 && gameStarted === true) {gameStarted = false; score+=3;
+        
+        } else if (this.ballX>304 && this.ballX < 318 && this.ballY > 200 && this.ballY <           210 && this.x < 250 && gameStarted === true){gameStarted = false; score+=2; 
+        
+        } else if (this.ballY > 400){ gameStarted = false;}
+    };
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//Start Scene Function
+
+var startScene = function(){
+    
+    currentScene = 1;
+    
+    textAlign(LEFT, BOTTOM);
+    
+    strokeWeight(1);
+
+    noStroke();
+
+    background(0, 0, 0);
+   
+    fill(245, 197, 115);
+    rect(0, 250, 400, 150);
+    
+    // Bouncing Ball Mechanics
+    
+    y = -0.02*t*t + 5.0*t;
+    
+    // Shadow Mechanics
+    var grey = 0.1 * y + 200;
+    
+    var shadowSize = 0.2 * y + 59;
+
+    fill(grey, 197, 115);
+    
+    ellipse(200, 310, shadowSize, 10);
+    
+    // draw ball & plane inversion
+    var correctedY = 250 - y;
+
+    
+    fill(250, 139, 3);
+    ellipse(200, correctedY, 100, 100);
+    stroke(0,0,0);
+    ellipse(200, correctedY, 60, 100);
+    ellipse(200, correctedY, 20, 100);
+    noFill();
+    ellipse(200, correctedY, 100, 60);
+    ellipse(200, correctedY, 100, 20); 
+    noStroke();
+    if (y < 0) {
+        t = 0;}
+    t+= 5;
+
+    // start button
+    fill(255,255,255);
+    rect(20, 95, 110, 60);  
+    fill(255, 170, 0);
+    rect(25, 100, 100, 50);
+    fill(0,0,0);
+    textSize(30);
+    text("START", 38, 136);
+    
+    // help button
+    fill(255,255,255);
+    rect(270, 95, 110, 60);  
+    fill(255, 170, 0);
+    rect(275, 100, 100, 50);
+    fill(0,0,0);
+    textSize(30);
+    text("HELP", 296, 136);
+    
+    // Title
+    fill(255, 0, 0);
+    textSize(50);
+    var f = createFont("fantasy");
+    textFont(f);
+    text("SHOOT-AROUND", 45, 370);
+
+};
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
+
+//Main Program function
+var mainGame = function(){
+    
+    currentScene = 3;
+     
+    //background coloring
+    background(245, 197, 115);
+    
+  
+
+    // ADDITIONAL BACKGROUND ITEMS - BEHIND BALL
+    //background stands
+    fill(204, 145, 100);
+    rect(0, 20, 400, 280);
+    
+    for (var i = 1; i<14; i++){line(0,i*20, 400, i*20);}
+    strokeWeight(2);
+    line(100, 20, 100, 300);
+    line(40, 20, 40, 300);
+    line(250, 20, 250, 300);
+    line(310, 20, 310, 300);
+
+    //court design
+    fill(245, 197, 115);
+    ellipse(400, 350, 600, 100);
+    fill(255,255,255);
+    ellipse(255, 350, 60,60);
+    fill(255, 0, 0);
+    rect(255, 320, 148, 60); 
+    stroke(255, 0, 0);
+   
+    //3 point Line 
+    line(100,300, 100, 400);
+    fill(0, 0, 0);
+    textSize(16);
+    text("3-Point Area", 5,355);
+    strokeWeight(1);
+    stroke (0,0,0);
+    
+    // restricted area
+    stroke(255, 0, 0);
+    strokeWeight(2);
+    line(250, 300, 250, 400);
+     text("2-Point Area", 125, 355);
+    fill(255,255,255);
+    text("Restricted Area", 280, 355);
+    text("(0 pts)", 310, 372);
+    strokeWeight(1);
+    stroke (0,0,0);
+
+    // powerbar decay
+    timeButtonPressed -= 0.25;
+    
+    // Reset Timer
+    timerBinary = 0;
+    
+    // user interaction -- keyboard
+    keyPressed = function(){
+        // up arrow = increase shot power IFF ball is not currently being shot
+        if (keyCode === UP && gameStarted ===  false){ timeButtonPressed+=10;}
+        if (keyCode === UP && gameStarted === true){}
+        
+        // Space Bar = shoot ball IFF ball is not currently being shot
+        if (keyCode === 32 && gameStarted === false){timeIncrease = timeIncrease+1;                     gameStarted = true;}
+        if (keyCode === 32 && gameStarted === true){}
+        
+        // left arrow = move ball left IFF ball is not currently being shot
+        if (keyCode === LEFT && gameStarted === false){positionX-=30; constrain(positionX, 0             , 220);} 
+        if (keyCode === LEFT && gameStarted === true){}
+        
+        // right arrow = move ball right IFF ball is not currently being shot
+        if (keyCode === RIGHT && gameStarted === false){positionX+=30; constrain(positionX,             0,220);}
+        if (keyCode === RIGHT && gameStarted === true){}
+    };
+
+
+       
+     
+    // Power bar
+    
+    // relation to up arrow key
+    var colorRange = 255-10*timeButtonPressed;  
+    var red = 255;
+    
+    // black-out bar and hold at 0 if at 0
+    if (timeButtonPressed <= 0){timeButtonPressed = 0 ; var red = 0; var colorRange = 0; }
+    
+    // draw power bar
+    fill(0, 0, 0);
+    rect(0, 0, width, 20);
+    fill(red, colorRange , 0);
+    rect(timeButtonPressed*10, 0, 40, 20);
+        
+        
+    
+    // Draw Ball            Y-axis lock     speed --- grav. accel. --- angle (Y-speed)
+    var ball = new Basketball( 350,(timeButtonPressed/12)+3,-0.25, 3, 12.5); 
+    ball.draw();
+    ball.update();
+ 
+    //score clock
+    var scoreX = 310;
+    var scoreY = 130;
+    fill(255,255,255);
+    rect(scoreX-5, scoreY - 40, 100, 60); 
+    fill(0, 0, 0);
+    rect(scoreX,scoreY - 35, 90, 50);
+    textSize(30);
+    fill(255, 255, 255);
+    text(score + " Pts", scoreX+5, scoreY);
+    
+    // clock clock 
+    
+    //timers relation to score clock
+    var clockX = scoreX;
+    var clockY = scoreY-60;
+    
+    // draw timer
+    fill(255,255,255);
+    rect(clockX-5, clockY - 40, 100, 60); 
+    fill(0, 0, 0);
+    rect(clockX,clockY - 35, 90, 50);
+    textSize(30);
+    fill(255, 255, 255);
+    
+    //Timer Mechanics (milliseconds since load start - milliseconds since main game start
+    var mainGameTimer = 60 - round((millis()-startTimer)/1000);
+    text(mainGameTimer, clockX+15, clockY);
+    
+    // Timer binary = dummy global variable so millis in function can be registered globally
+    if (mainGameTimer < 0){timerBinary++;}
+
+    //backboard
+    noStroke();
+    fill(0,0,0);
+    rect(350, 200, 50, 10);
+    rect(320, 209, 19, 2);
+    fill(255,0,0);
+    rect(340,160, 10, 50); 
+    fill(255,255,255);
+
+    //net
+    triangle(304, 210, 337, 210, 320, 240);
+    rect(311,215, 18, 25);
+    stroke(0,0,0);
+    strokeWeight(3);
+    ellipse(320, 210, 30, 10);
+    
+    var netString = function (x , height){
+        this.x = x;
+        this.height = [212,228,240,240,240,240,220];
+    
+        netString.prototype.draw = function(){ //from top to bottom
+            strokeWeight(1);
+        
+            for (var i=1; i<this.height.length; i++){
+                line(this.x+(4*i),215, this.x+(4*i), this.height[i]);
+            }
+        };
+    };
+    var netStringY = function ( y, startX, finishX){
+        this.y = y;
+        this.startX = [0,308, 310, 310, 310];
+        this.finishX = [0,332,328,328, 328];
+    
+        netStringY.prototype.draw = function() { //from side to side
+            strokeWeight(1);
+        
+            for (var i=1; i<this.startX.length; i++){
+                line(this.startX[i], this.y+i*6, this.finishX[i], this.y+i*6)
+            ;}
+        };
+    };
+    var netString1 = new netString (306);
+    var netStringY1 = new netStringY (212);
+    netString1.draw();
+    netStringY1.draw();      
+    
+    
+
+
+};
+////////////////////////////////////////////////////////////////////////////////////////////
+
+var endScene = function(){
+    
+    // scene indicator
+    currentScene = 4;
+    
+    var rewardItem;
+    
+    background(0,0,0);
+    
+    // item taken from previous work on khanacademy
+    // draw basketballs falling on click function
+    var fallingDropsArray = function(){
+        for (var i = 0; i < xPositions.length; i++) {
+            
+            // Draw Basketball at positions in array defined by mouseclicked function
+            noStroke();
+            fill(250, 139, 3);
+            stroke(0,0,0);
+            ellipse(xPositions[i], yPositions[i], 60, 60);
+            ellipse(xPositions[i], yPositions[i], 40, 60);
+            ellipse(xPositions[i], yPositions[i], 20, 60);
+            noFill();
+            ellipse(xPositions[i], yPositions[i], 60, 40);
+            ellipse(xPositions[i], yPositions[i], 60, 20);
+        
+            // Have basketballs fall off screen and reappear after click
+            if (yPositions[i] > 400){yPositions[i]-=4*xPositions[i];}
+            else {  yPositions[i] += 5;}
+            }
+    };
+    
+    // call above function
+    fallingDropsArray();
+    
+    // Final Score Card
+    fill(194, 137, 68);
+    rect(95, 145, 210, 110);
+    fill(245, 225, 125);
+    rect(100, 150, 200, 100);
+    fill(38, 0, 255);
+    textSize(35);
+    text("Your Score!", 200, 180);
+    text(score, 200, 220); 
+    
+    
+    // Re-play button
+    fill(255,255,255);
+    rect(145, 295, 110, 60);
+    fill(90, 166, 46);
+    rect(150, 300, 100, 50);
+    fill(38, 0, 255);
+    textSize(28);
+    text("Re-Play", 200, 325);
+    
+    
+    // Reward Message - response based upon player score
+    textAlign(CENTER,CENTER);
+    if (score === 0){ textSize(18); rewardItem =                                                    "You miss all of the baskets you never take";
+    } else if (score > 0 && score < 10){textSize(22);  rewardItem =                                 "Draft Bust";
+    } else if (score >= 10 && score <20){textSize(28);  rewardItem =                                "G-league";
+    } else if (score >=20 && score < 30){textSize(36);  rewardItem =                                "Role Player";
+    } else if (score >=30 && score < 40){textSize(44);  rewardItem =                                "Sixth Man";
+    } else if (score >=40 && score <50){textSize(52);  rewardItem =                                 "Starter";
+    } else if (score >=50 && score < 60){textSize(60);  rewardItem =                                "All-Star";
+    } else if (score >= 60){textSize(68);  rewardItem =                                             "Basketball God";
+    }
+    
+    // draw reward
+    fill(255, 51, 0);
+    text(rewardItem, 200, 50);
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////
+
+
+var helpScene = function(){
+    currentScene =2;
+    background(0,0,0);
+    
+    // drawing of assistance windows
+    fill(250, 139, 3);
+    strokeWeight(2);
+    stroke(0,0,0);
+    ellipse(200, 200, 100, 100);
+    stroke(0,0,0);
+    ellipse(200, 200, 60, 100);
+    ellipse(200, 200, 20, 100);
+    noFill();
+    ellipse(200, 200, 100, 60);
+    ellipse(200, 200, 100, 20); 
+    noStroke();
+    fill(255,255,255);
+    rect(100, 300, 80, 40);
+    rect(220, 300, 80, 40);
+    rect(50, 180, 40, 80);
+    rect(168, 20, 200, 40);
+    rect(270, 140, 130, 135);
+    triangle(60, 320, 100, 360, 100, 280);
+    triangle(340, 320, 300, 360, 300, 280);
+    triangle(70, 140, 30, 180, 110, 180);
+    stroke(255,255,255);
+    strokeWeight(4);
+    line(0, 275, 400, 275);
+    line(140, 275, 140, 0);
+    line(140, 140, 400, 140);
+    textSize(24);
+    text("Use left & right arrow keys to move ball", 10, 390);
+    text("Use up key", 5 , 70);
+    text("to add power", 5, 100);
+    text("Use space bar to", 170, 100);
+    text("shoot ball", 170, 130);
+    text("BACK", 320, 200);
+    stroke(0,0,0);
+    line(250, 40, 286, 40);
+    
+    // back button
+    fill(247, 45, 10);
+    rect(275, 145, 120,125);
+    fill(255,255,255);
+    textSize(50);
+    text("BACK", 280, 225);
+    
+};
+
+
+// begin start scene on load
+startScene();
+
+
+// define when to draw which scene
+draw = function() {
+    // if timer dummy variable goes off (timer counts down) , go to end game scene
+    if (currentScene === 3 && timerBinary === 1){endScene();
+    
+    // tie scene to global variable registered outside function
+    } else if (currentScene === 2){helpScene();
+    } else if(currentScene === 3){ mainGame();
+    } else if (currentScene ===1) {startScene(); 
+    } else if (currentScene === 4){endScene();}
+};
+
+// Define clicking affects in all scene
+mouseClicked = function(){
+    
+    // Start button - Parameters & effects
+    if (currentScene === 1 && mouseX>20 && mouseX < 130 && mouseY > 95 && mouseY < 155){
+        mainGame(); score = 0;
+        startTimer = round(millis()-startTimer/1000);
+    
+    // Help Button - Parameters & effects
+    } else if (currentScene === 1 &&  mouseX > 270 && mouseX < 380 && mouseY > 95 && mouseY         < 155){helpScene();
+    
+    // Back Button - Parameters & effects
+    } else if(currentScene === 2 && mouseX>275 && mouseX < 395 && mouseY > 145 && mouseY <          270){ startScene();
+    
+    // Re-Play Button - Parameters & effects
+    } else if (currentScene === 4 && mouseX > 150 && mouseX < 250 && mouseY > 300 && mouseY <     350){startScene();
+   
+    // falling basketballs affect    
+    } else if (currentScene === 4){
+        xPositions.push (mouseX);
+        yPositions.push (mouseY);}
+};
                     
         
           
